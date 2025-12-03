@@ -8,11 +8,18 @@
 #include "check_tree.h"
 #include "differentiation.h"
 
-TreeErr Teilor(Tree * tree, Tree ** ty, char * param, TreeElem_t * arr, size_t n) {
+TreeErr Teilor(Tree * tree, Tree ** ty, const char * param, TreeElem_t * arr, size_t n) {
   treeVerify(tree, "BEFORE");
   int ind = getInd(tree, param);
   if (ind == -1) {
-    return INCORRECT_DATA;
+    treeInit(ty);
+    copyVars((*ty)->vars, tree->vars);
+    Data data;
+    data.val.val = getResult(tree->root, arr);
+    (*ty)->root = createNode(VAL, data, NULL, NULL);
+    (*ty)->len = 1;
+    treeVerify(*ty, "AFTER");
+    return SUCCESS;
   }
   Tree ** dif = (Tree **) calloc(n + 1, sizeof(Tree *));
   dif[0] = tree;
@@ -23,12 +30,13 @@ TreeErr Teilor(Tree * tree, Tree ** ty, char * param, TreeElem_t * arr, size_t n
         treeDestroy(dif[j]);
       }
       free(dif);
+      return result;
     }
   }
   TreeElem_t result = getResult(dif[0]->root, arr);
   dif[0] = NULL;
   treeInit(dif);
-  memcpy((*dif)->vars, tree->vars, sizeof(tree->vars));
+  copyVars((*dif)->vars, tree->vars);
   Data data;
   data.val.val = result;
   dif[0]->root = createNode(VAL, data, NULL, NULL);
@@ -37,7 +45,7 @@ TreeErr Teilor(Tree * tree, Tree ** ty, char * param, TreeElem_t * arr, size_t n
     treeDestroy(dif[i]);
     dif[i] = NULL;
     treeInit(dif + i);
-    memcpy(dif[i]->vars, tree->vars, sizeof(tree->vars));
+    copyVars(dif[i]->vars, tree->vars);
     data.val.val = result;
     Data var;
     var.var.ind = ind;
@@ -49,11 +57,17 @@ TreeErr Teilor(Tree * tree, Tree ** ty, char * param, TreeElem_t * arr, size_t n
                         createNode(VAL, val, NULL, NULL)), createNode(VAL, st, NULL, NULL)));
   }
   treeInit(ty);
-  memcpy((*ty)->vars, tree->vars, sizeof(tree->vars));
+  copyVars((*ty)->vars, tree->vars);
   (*ty)->root = dif[0]->root;
+  for (size_t i = 0; i < 10; i++) {
+    free(dif[0]->vars[i]);
+  }
   free(dif[0]);
   for (size_t i = 1; i <= n; i++) {
     (*ty)->root = ADD_((*ty)->root, dif[i]->root);
+    for (size_t j = 0; j < 10; j++) {
+      free(dif[i]->vars[j]);
+    }
     free(dif[i]);
   }
   parent((*ty)->root, &(*ty)->len);
@@ -63,7 +77,7 @@ TreeErr Teilor(Tree * tree, Tree ** ty, char * param, TreeElem_t * arr, size_t n
   return SUCCESS;
 }
 
-TreeErr ndiff(Tree * tree, Tree ** dy, char * param, size_t n) {
+TreeErr ndiff(Tree * tree, Tree ** dy, const char * param, size_t n) {
   treeVerify(tree, "BEFORE");
   Tree * cur = tree;
   Tree * next = NULL;
@@ -83,38 +97,45 @@ TreeErr ndiff(Tree * tree, Tree ** dy, char * param, size_t n) {
     next = NULL;
   }
   *dy = cur;
-  simplify(dy);
   treeVerify(*dy, "AFTER");
   return SUCCESS;
 }
 
-TreeErr differentiation(Tree * tree, Tree ** dy, char * param) {
+TreeErr differentiation(Tree * tree, Tree ** dy, const char * param) {
   treeVerify(tree, "BEFORE");
   if (*dy != NULL) {
     return INCORRECT_DATA;
   }
-  int ind = getInd(tree, param);
-  if (ind == -1) {
-    return INCORRECT_DATA;
+  if (tree->root == NULL) {
+    return EMPTY_TREE;
   }
+  int ind = getInd(tree, param);
   treeInit(dy);
-  memcpy((*dy)->vars, tree->vars, sizeof(tree->vars));
+  copyVars((*dy)->vars, tree->vars);
+  if (ind == -1) {
+    (*dy)->root = ZeroNode;
+    (*dy)->len = 1;
+    treeVerify(*dy, "AFTER");
+    return SUCCESS;
+  }
   (*dy)->root = differen(tree->root, ind);
   parent((*dy)->root, &(*dy)->len);
+  treeVerify(*dy, "BEFORE");
   simplify(dy);
   treeVerify(*dy, "AFTER");
   return SUCCESS;
 }
 
-int getInd(Tree * tree, char * param) {
-  int ind = -1;
+int getInd(Tree * tree, const char * param) {
   for (int i = 0; i < 10; i++) {
+    if (tree->vars[i] == 0) {
+      return -1;
+    }
     if (!strncmp(tree->vars[i], param, strlen(tree->vars[i]))) {
-      ind = i;
-      break;
+      return i;
     }
   }
-  return ind;
+  return -1;
 }
 
 Node_t * differen(Node_t * node, int ind) {
@@ -217,6 +238,15 @@ Node_t * createNode(Type type, Data data, Node_t * left, Node_t * right) {
   return result;
 }
 
+void copyVars(char ** new_vars, char ** old_vars) {
+  for (size_t i = 0; i < 10; i++) {
+    if (old_vars[i] == NULL) {
+      return;
+    }
+    new_vars[i] = strdup(old_vars[i]);
+  }
+}
+
 void simplify(Tree ** tree) {
   size_t length = (*tree)->len;
   while (1) {
@@ -239,11 +269,18 @@ Node_t * calcConstant(Node_t * node, size_t * len) {
   Node_t * right = calcConstant(node->right, len);
   if ((left->type == VAL && right == NULL) || (left->type == VAL && right->type == VAL)) {
     Data data;
-    data.val.val = getVal(node, left->data.val.val, right->data.val.val);
+    if (right != 0) {
+      data.val.val = getVal(node, left->data.val.val, right->data.val.val);
+    }
+    else {
+      data.val.val = getVal(node, left->data.val.val, 0);
+    }
     node->type = VAL;
     node->data = data;
     DestroyNode(node->left, len);
-    DestroyNode(node->right, len);
+    if (node->right != NULL) {
+      DestroyNode(node->right, len);
+    }
     node->left = node->right = NULL;
   }
   return node;
@@ -259,8 +296,12 @@ Node_t * removeOneZero(Node_t * node, size_t * len) {
     if (node->data.op == PLUS) {
       return dropNode(node, left, len);
     }
+    if (node->data.op == MINUS && node->left != NULL && node->left->type == OP && node->left->data.op == MINUS) {
+      Node_t * cur = dropNode(node, left, len);
+      return dropNode(cur, cur->left, len);
+    }
     else if (left->type == VAL && left->data.val.val == 1) {
-      if (node->data.op == MUL || node->data.op == DIV) {
+      if (node->data.op == MUL) {
         DestroyNode(left, len);
         return dropNode(node, right, len);
       }
@@ -268,7 +309,7 @@ Node_t * removeOneZero(Node_t * node, size_t * len) {
         subTreeToConst(node, left, right, 1, len);
       }
     }
-    else if (right->type == VAL && right->data.val.val == 1) {
+    else if (right != NULL && right->type == VAL && right->data.val.val == 1) {
       if (node->data.op == MUL || node->data.op == DIV || node->data.op == POW) {
         DestroyNode(right, len);
         return dropNode(node, left, len);
@@ -283,7 +324,7 @@ Node_t * removeOneZero(Node_t * node, size_t * len) {
         subTreeToConst(node, left, right, 0, len);
       }
     }
-    else if (right->type == VAL && right->data.val.val == 0) {
+    else if (right != NULL && right->type == VAL && right->data.val.val == 0) {
       if (node->data.op == ADD || node->data.op == SUB) {
         DestroyNode(right, len);
         return dropNode(node, left, len);

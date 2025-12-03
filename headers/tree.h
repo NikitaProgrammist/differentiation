@@ -19,7 +19,56 @@ enum TreeErr {
   EMPTY_TREE,
   FILE_ERR,
   INCORRECT_DATA,
-  INCORRECT_ANSWER
+  INCORRECT_ANSWER,
+  INCORRECT_EXPR
+};
+
+enum Type {
+  OPERATION,
+  VARIABLE,
+  VALUE
+};
+
+enum TypeOp {
+  SIN,
+  COS,
+  TAN,
+  COT,
+  ASIN,
+  ACOS,
+  ATAN,
+  ACOT,
+  SINH,
+  COSH,
+  TANH,
+  COTH,
+  ASINH,
+  ACOSH,
+  ATANH,
+  ACOTH,
+  LN,
+  PLUS,
+  MINUS,
+  LOG,
+  ADD,
+  SUB,
+  MUL,
+  DIV,
+  POW
+};
+
+struct TypeVar {
+  int ind;
+};
+
+struct TypeVal {
+  TreeElem_t val;
+};
+
+union Data {
+  TypeOp op;
+  TypeVar var;
+  TypeVal val;
 };
 
 TreeErr treeInit(Tree ** tree);
@@ -34,7 +83,7 @@ TreeElem_t getVal(Node_t * node, TreeElem_t left, TreeElem_t right);
 TreeElem_t getResult(Node_t * node, TreeElem_t * arr);
 TreeErr treePrint(Tree * tree);
 void PrintNode(Tree * tree, Node_t * node, FILE * file=stdout);
-TreeErr getTree(Tree * tree);
+//TreeErr getTree(Tree * tree);
 TreeErr saveTree(Tree * tree, const char * filename);
 
 #endif // TREE_H

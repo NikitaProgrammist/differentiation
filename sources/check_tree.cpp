@@ -10,6 +10,9 @@
 #include "check_tree.h"
 
 Errors verify(const Tree * tree, const char * file, const char * func, const size_t len, const char * position) {
+  if (tree == NULL) {
+    return INVALID;
+  }
   if (checkCycle(tree) != VALID) {
     dump(tree, file, func, len, position, INVALID);
     return INVALID;
@@ -32,7 +35,7 @@ Errors checkCycle(const Tree * tree) {
   int i = 0;
   while (i >= 0 && len < tree->len + 1) {
     Node_t * node = stack[i];
-    for (int j = i; j < len; j++) {
+    for (size_t j = i; j < len; j++) {
         stack[j] = stack[j + 1];
     }
     i--;
@@ -139,11 +142,11 @@ const char * getNodeDataString(const Node_t * node, const Tree * tree) {
     switch (node->type) {
         case OPERATION:
             if (node->data.op >= 0 && node->data.op < 26) {
-                return operations[node->data.op];
+                return operations[node->data.op].name;
             }
             return "unknown_op";
         case VARIABLE:
-            if (tree->vars && node->data.var.ind < tree->len) {
+            if (node->data.var.ind < tree->len) {
                 return tree->vars[node->data.var.ind];
             }
             return "unknown_var";
@@ -167,7 +170,7 @@ const char* getNodeTypeString(Type type) {
 void createSquareNodes(FILE * file, const Node_t * node, const Tree* tree) {
   if (!node) return;
 
-  fprintf(file, "  node_%p [label=<\n", (void*)node);
+  fprintf(file, "  node_%p [label=<\n", node);
   fprintf(file, "    <table border=\"1\" cellborder=\"1\" cellspacing=\"0\" bgcolor=\"#6e7681\" color=\"#FFFF00\">\n");
   fprintf(file, "      <tr><td border=\"1\" color=\"#ffff00\" colspan=\"2\"><b>%s</b></td></tr>\n",
           getNodeTypeString(node->type));
@@ -176,24 +179,24 @@ void createSquareNodes(FILE * file, const Node_t * node, const Tree* tree) {
   fprintf(file, "      <tr>\n");
 
   if (node->left == NULL) {
-    fprintf(file, "        <td border=\"1\" color=\"#ffff00\">L: nil</td>\n");
+    fprintf(file, "        <td border=\"1\" color=\"#ffff00\">nil</td>\n");
   } else {
-    fprintf(file, "        <td border=\"1\" color=\"#ffff00\">L: %p</td>\n", (void*)node->left);
+    fprintf(file, "        <td border=\"1\" color=\"#ffff00\">%p</td>\n", (void*)node->left);
   }
 
   if (node->right == NULL) {
-    fprintf(file, "        <td border=\"1\" color=\"#ffff00\">R: nil</td>\n");
+    fprintf(file, "        <td border=\"1\" color=\"#ffff00\">nil</td>\n");
   } else {
-    fprintf(file, "        <td border=\"1\" color=\"#ffff00\">R: %p</td>\n", (void*)node->right);
+    fprintf(file, "        <td border=\"1\" color=\"#ffff00\">%p</td>\n", (void*)node->right);
   }
 
   fprintf(file, "      </tr>\n");
 
   fprintf(file, "      <tr>\n");
   if (node->parent == NULL) {
-    fprintf(file, "        <td border=\"1\" color=\"#ffff00\" colspan=\"2\">Parent: root</td>\n");
+    fprintf(file, "        <td border=\"1\" color=\"#ffff00\" colspan=\"2\">root</td>\n");
   } else {
-    fprintf(file, "        <td border=\"1\" color=\"#ffff00\" colspan=\"2\">Parent: %p</td>\n", (void*)node->parent);
+    fprintf(file, "        <td border=\"1\" color=\"#ffff00\" colspan=\"2\">%p</td>\n", (void*)node->parent);
   }
   fprintf(file, "      </tr>\n");
 

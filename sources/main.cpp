@@ -1,36 +1,47 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "tree.h"
-#include "private_tree.h"
 #include "utils.h"
+#include "check_tree.h"
+#include "get_tree.h"
 #include "differentiation.h"
 
 int main() {
   clear();
 
-  double vals[] = {5, 1};
+  double vals[] = {0, 1};
 
   Tree * tree = NULL;
-  treeInit(&tree);
-  getTree(tree);
+  size_t n = 0;
+  char * str = NULL;
+  getline(&str, &n, stdin);
+  TreeErr r = getG(str, &tree);
+  if (r != SUCCESS) {
+    parseErrors(r);
+    free(str);
+    return 0;
+  }
+  free(str);
 
   Tree * d = NULL;
   differentiation(tree, &d, "x");
-
-  double result = 0;
-  treeGetResult(d, vals, &result);
-  printf("%lg\n", result);
+  treePrint(d);
 
   Tree * dd = NULL;
-  ndiff(tree, &dd, "x", 10);
+  ndiff(tree, &dd, "x", 5);
   treePrint(dd);
 
   Tree * ty = NULL;
   Teilor(tree, &ty, "x", vals, 10);
   treePrint(ty);
 
+
+  double result = 0;
+  treeGetResult(tree, vals, &result);
+  printf("%lg\n", result);
+
   treePrint(tree);
-  treePrint(d);
   treeDestroy(ty);
   treeDestroy(dd);
   treeDestroy(d);

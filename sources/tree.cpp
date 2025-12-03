@@ -19,7 +19,13 @@ TreeErr treeInit(Tree ** tree) {
 }
 
 void treeDestroy(Tree * tree) {
+  if (tree == NULL) {
+    return;
+  }
   DestroyNode(tree->root, &tree->len);
+  for (size_t i = 0; i < 10; i++) {
+    free(tree->vars[i]);
+  }
   free(tree);
 }
 
@@ -154,7 +160,7 @@ TreeErr treePrint(Tree * tree) {
 
 void PrintNode(Tree * tree, Node_t * node, FILE * file) {
   if (node->type == OPERATION && (node->left == NULL || node->right == NULL)) {
-    fprintf(file, " %s(", operations[node->data.op]);
+    fprintf(file, " %s(", operations[node->data.op].name);
   }
   if (node->type == VARIABLE) {
     fprintf(file, " %s ", tree->vars[node->data.var.ind]);
@@ -170,7 +176,7 @@ void PrintNode(Tree * tree, Node_t * node, FILE * file) {
     PrintNode(tree, node->left, file);
   }
   if (node->type == OPERATION && node->left != NULL && node->right != NULL) {
-    fprintf(file, "%s", operations[node->data.op]);
+    fprintf(file, "%s", operations[node->data.op].name);
   }
   if (node->right != NULL) {
     PrintNode(tree, node->right, file);
@@ -185,7 +191,7 @@ void PrintNode(Tree * tree, Node_t * node, FILE * file) {
   return;
 }
 
-
+/*
 TreeErr getTree(Tree * tree) {
   treeVerify(tree, "BEFORE");
   tree->root = (Node_t *) calloc(1, sizeof(Node_t));
@@ -213,6 +219,7 @@ TreeErr getTree(Tree * tree) {
   treeVerify(tree, "AFTER");
   return SUCCESS;
 }
+*/
 
 TreeErr saveTree(Tree * tree, const char * filename) {
   treeVerify(tree, "BEFORE");

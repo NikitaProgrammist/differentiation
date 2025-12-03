@@ -1,13 +1,14 @@
 #ifndef DIFFERENTIATION_H
 #define DIFFERENTIATION_H
 
-TreeErr Teilor(Tree * tree, Tree ** ty, char * param, TreeElem_t * arr, size_t n);
-TreeErr ndiff(Tree * tree, Tree ** dy, char * param, size_t n);
-TreeErr differentiation(Tree * tree, Tree ** dy, char * param);
+TreeErr Teilor(Tree * tree, Tree ** ty, const char * param, TreeElem_t * arr, size_t n);
+TreeErr ndiff(Tree * tree, Tree ** dy, const char * param, size_t n);
+TreeErr differentiation(Tree * tree, Tree ** dy, const char * param);
 Node_t * differen(Node_t * node, int ind);
-int getInd(Tree * tree, char * param);
+int getInd(Tree * tree, const char * param);
 void parent(Node_t * node, size_t * len);
 Node_t * createNode(Type type, Data data, Node_t * left, Node_t * right);
+void copyVars(char ** new_vars, char ** old_vars);
 Node_t * copy(Node_t * node);
 void simplify(Tree ** tree);
 Node_t * calcConstant(Node_t * node, size_t * len);

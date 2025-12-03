@@ -56,6 +56,9 @@ void parseErrors(TreeErr error) {
     case INCORRECT_ANSWER:
       colorPrintf(RED, BOLD, "Некорректный ответ");
       break;
+    case INCORRECT_EXPR:
+      colorPrintf(RED, BOLD, "Некорректное выражение");
+      break;
     default:
       colorPrintf(RED, BOLD, "Неизвестная ошибка");
       break;

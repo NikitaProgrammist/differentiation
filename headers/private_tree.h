@@ -1,54 +1,6 @@
 #ifndef PRIVATE_TREE_H
 #define PRIVATE_TREE_H
 
-enum Type {
-  OPERATION,
-  VARIABLE,
-  VALUE
-};
-
-enum TypeOp {
-  SIN,
-  COS,
-  TAN,
-  COT,
-  ASIN,
-  ACOS,
-  ATAN,
-  ACOT,
-  SINH,
-  COSH,
-  TANH,
-  COTH,
-  ASINH,
-  ACOSH,
-  ATANH,
-  ACOTH,
-  LN,
-  LOG,
-  ADD,
-  SUB,
-  MUL,
-  DIV,
-  POW,
-  PLUS,
-  MINUS
-};
-
-struct TypeVar {
-  int ind;
-};
-
-struct TypeVal {
-  TreeElem_t val;
-};
-
-union Data {
-  TypeOp op;
-  TypeVar var;
-  TypeVal val;
-};
-
 struct Node_t {
   Type type;
   Data data;
@@ -63,19 +15,42 @@ struct Tree {
   size_t len;
 };
 
-inline const char * operations[25] = {"sin", "cos", "tg", "ctg",
-                                      "arcsin", "arccos", "arctg", "arcctg",
-                                      "sh", "ch", "th", "cth", "arsh", "arch",
-                                      "arth", "arcth", "ln", "log",
-                                      "+", "-", "*", "/", "^", "+", "-"};
+struct Operations {
+  const char * name;
+  Data data;
+  size_t len;
+};
 
-inline const Data datas[30] = {{.op = SIN}, {.op = COS}, {.op = TAN}, {.op = COT},
-                               {.op = ASIN}, {.op = ACOS}, {.op = ATAN}, {.op = ACOT},
-                               {.op = SINH}, {.op = COSH}, {.op = TANH}, {.op = COTH},
-                               {.op = ASINH}, {.op = ACOSH}, {.op = ATANH}, {.op = ACOTH},
-                               {.op = LN}, {.op = LOG}, {.op = ADD}, {.op = SUB}, {.op = MUL},
-                               {.op = DIV}, {.op = POW}, {.op = PLUS}, {.op = MINUS},
-                               {.val = {0}}, {.val = {1}}, {.val = {2}}, {.val = {1 / 2}}, {.val = {0.0 / 0.0}}};
+inline Operations operations[30] = {{.name = "sin", .data = {.op = SIN}, .len = 3},
+                                    {.name = "cos", .data = {.op = COS}, .len = 3},
+                                    {.name = "tan", .data = {.op = TAN}, .len = 3},
+                                    {.name = "ctg", .data = {.op = COT}, .len = 3},
+                                    {.name = "arcsin", .data = {.op = ASIN}, .len = 6},
+                                    {.name = "arccos", .data = {.op = ACOS}, .len = 6},
+                                    {.name = "arctg", .data = {.op = ATAN}, .len = 5},
+                                    {.name = "arcctg", .data = {.op = ACOT}, .len = 6},
+                                    {.name = "sh", .data = {.op = SINH}, .len = 2},
+                                    {.name = "ch", .data = {.op = COSH}, .len = 2},
+                                    {.name = "th", .data = {.op = TANH}, .len = 2},
+                                    {.name = "cth", .data = {.op = COTH}, .len = 3},
+                                    {.name = "arsh", .data = {.op = ASINH}, .len = 4},
+                                    {.name = "arch", .data = {.op = ACOSH}, .len = 4},
+                                    {.name = "arth", .data = {.op = ATANH}, .len = 4},
+                                    {.name = "arcth", .data = {.op = ACOTH}, .len = 5},
+                                    {.name = "ln", .data = {.op = LN}, .len = 2},
+                                    {.name = "+", .data = {.op = PLUS}, .len = 1},
+                                    {.name = "-", .data = {.op = MINUS}, .len = 1},
+                                    {.name = "log", .data = {.op = LOG}, .len = 3},
+                                    {.name = "+", .data = {.op = ADD}, .len = 1},
+                                    {.name = "-", .data = {.op = SUB}, .len = 1},
+                                    {.name = "*", .data = {.op = MUL}, .len = 1},
+                                    {.name = "/", .data = {.op = DIV}, .len = 1},
+                                    {.name = "^", .data = {.op = POW}, .len = 1},
+                                    {.name = "zero", .data = {.val = {0}}, .len = 4},
+                                    {.name = "one", .data = {.val = {1}}, .len = 3},
+                                    {.name = "two", .data = {.val = {2}}, .len = 3},
+                                    {.name = "half", .data = {.val = {1.0 / 2.0}}, .len = 4},
+                                    {.name = "nan", .data = {.val = {0.0 / 0.0}}, .len = 3}};
 
 #define ZERO 25
 #define ONE 26
@@ -87,7 +62,7 @@ inline const Data datas[30] = {{.op = SIN}, {.op = COS}, {.op = TAN}, {.op = COT
 #define OP OPERATION
 #define VAR VARIABLE
 #define VAL VALUE
-#define D(arg) datas[arg]
+#define D(arg) operations[arg].data
 #define CL copy(node->left)
 #define CR copy(node->right)
 #define ZeroNode createNode(VAL, D(ZERO), NULL, NULL)
