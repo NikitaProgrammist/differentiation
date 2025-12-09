@@ -24,7 +24,8 @@ $(OBJECTS_DIR)/%.o: $(FILES_DIR)/%.cpp
 	$(CC) $(CFLAGS) -c $< $(FLAGS) -o $@
 
 run: $(EXECUTABLE)
-	./build/main
+	./build/main ./tree.txt ./tex/res1.tex
+	pdflatex -output-directory=./tex ./tex/res1.tex
 
 clean:
 	rm -rf $(OBJECTS) $(EXECUTABLE)

@@ -6,6 +6,8 @@
 #include "tree.h"
 #include "private_tree.h"
 #include "check_tree.h"
+#include "get_tree.h"
+#include "differentiation.h"
 
 TreeErr treeInit(Tree ** tree) {
   *tree = (Tree *) calloc(1, sizeof(Tree));
@@ -41,6 +43,80 @@ void DestroyNode(Node_t * node, size_t * len) {
   return;
 }
 
+TreeErr mainTreeCycle(Tree * tree, Tree ** res, char * filename) {
+  printf("Выберите опцию: [1]первая производная, [2]производная n порядка, [3]разложение по Тейлору до o((x - x_0)^n), [4]значение выражения в точке.\n");
+  char c = getchar();
+  size_t len_str = 0;
+  char * str = NULL;
+  size_t len_val = 0;
+  TreeElem_t * vals = NULL;
+  size_t ord = 0;
+  TreeErr result = SUCCESS;
+  while (getchar() != '\n');
+
+  if (c == '1' || c == '2' || c == '3') {
+    printf("Введите переменную, по которой надо дифференцировать.\n");
+    getline(&str, &len_str, stdin);
+  }
+  if (c == '2' || c == '3') {
+    printf("Введите порядок дифференцирования.\n");
+    scanf("%zu", &ord);
+  }
+  if (c == '3' || c == '4') {
+    printf("Введите количество значений и значения переменных.\n");
+    scanf("%zu", &len_val);
+    vals = (TreeElem_t *) calloc(len_val, sizeof(TreeElem_t));
+    for (size_t i = 0; i < len_val; i++) {
+      scanf("%lg", vals + i);
+    }
+  }
+
+  if (c == '1') {
+    result = differentiation(tree, res, str, filename);
+    free(str);
+    tex(*res, filename, "AFTER");
+    return result;
+  }
+  if (c == '2') {
+    result = ndiff(tree, res, str, ord, filename);
+    free(str);
+    tex(*res, filename, "AFTER");
+    return result;
+  }
+  if (c == '3') {
+    result = Teilor(tree, res, str, vals, ord, filename);
+    free(str);
+    free(vals);
+    tex(*res, filename, "AFTER");
+    return result;
+  }
+  if (c == '4') {
+    result = treeInit(res);
+    if (result != SUCCESS) {
+      return result;
+    }
+    (*res)->root = (Node_t *) calloc(1, sizeof(Node_t));
+    (*res)->root->type = VALUE;
+    result = treeGetResult(tree, vals, &(*res)->root->data.val.val, filename);
+    tex(*res, filename, "AFTER");
+    free(vals);
+    return result;
+  }
+  tex(*res, filename, "AFTER");
+  return result;
+}
+
+TreeErr getTree(Tree ** tree, char * filename) {
+  FILE * file = fopen(filename, "r");
+  size_t n = 0;
+  char * str = NULL;
+  getline(&str, &n, file);
+  TreeErr result = getG(str, tree);
+  free(str);
+  fclose(file);
+  return result;
+}
+
 TreeErr treeGetFirst(Tree * tree, Node_t ** result) {
   treeVerify(tree, "BEFORE");
   *result = tree->root;
@@ -69,8 +145,9 @@ TreeErr treeGetLen(Tree * tree, size_t * len) {
   return SUCCESS;
 }
 
-TreeErr treeGetResult(Tree * tree, TreeElem_t * arr, TreeElem_t * result) {
+TreeErr treeGetResult(Tree * tree, TreeElem_t * arr, TreeElem_t * result, char * filename) {
   treeVerify(tree, "BEFORE");
+  tex(tree, filename, "BEFORE");
   *result = getResult(tree->root, arr);
   treeVerify(tree, "AFTER");
   return SUCCESS;
@@ -150,23 +227,22 @@ TreeElem_t getVal(Node_t * node, TreeElem_t left, TreeElem_t right) {
   }
 }
 
-TreeErr treePrint(Tree * tree) {
+TreeErr treePrint(Tree * tree, FILE * file) {
   treeVerify(tree, "BEFORE");
-  PrintNode(tree, tree->root);
-  printf("\n");
+  PrintNode(tree, tree->root, file);
   treeVerify(tree, "AFTER");
   return SUCCESS;
 }
 
 void PrintNode(Tree * tree, Node_t * node, FILE * file) {
   if (node->type == OPERATION && (node->left == NULL || node->right == NULL)) {
-    fprintf(file, " %s(", operations[node->data.op].name);
+    fprintf(file, " \\%s{", operations[node->data.op].name);
   }
   if (node->type == VARIABLE) {
-    fprintf(file, " %s ", tree->vars[node->data.var.ind]);
+    fprintf(file, " {%s} ", tree->vars[node->data.var.ind]);
   }
   if (node->type == VALUE) {
-    fprintf(file, " %lg ", node->data.val.val);
+    fprintf(file, " {%lg} ", node->data.val.val);
   }
   if (node->type == OPERATION && node->left != NULL && node->right != NULL && node->parent != NULL &&
       ((node->parent->data.op > SUB && node->data.op < MUL) || node->parent->data.op >= POW)) {
@@ -176,7 +252,26 @@ void PrintNode(Tree * tree, Node_t * node, FILE * file) {
     PrintNode(tree, node->left, file);
   }
   if (node->type == OPERATION && node->left != NULL && node->right != NULL) {
-    fprintf(file, "%s", operations[node->data.op].name);
+    switch(node->data.op) {
+      case ADD:
+        fprintf(file, " + ");
+        break;
+      case SUB:
+        fprintf(file, " - ");
+        break;
+      case MUL:
+        fprintf(file, " \\cdot ");
+        break;
+      case DIV:
+        fprintf(file, " \\over ");
+        break;
+      case POW:
+        fprintf(file, " ^ ");
+        break;
+      default:
+        fprintf(file, " %s ", operations[node->data.op].name);
+        break;
+    }
   }
   if (node->right != NULL) {
     PrintNode(tree, node->right, file);
@@ -186,40 +281,10 @@ void PrintNode(Tree * tree, Node_t * node, FILE * file) {
     fprintf(file, ") ");
   }
   if (node->type == OPERATION && (node->left == NULL || node->right == NULL)) {
-    fprintf(file, ") ");
+    fprintf(file, "} ");
   }
   return;
 }
-
-/*
-TreeErr getTree(Tree * tree) {
-  treeVerify(tree, "BEFORE");
-  tree->root = (Node_t *) calloc(1, sizeof(Node_t));
-  tree->root->type = OPERATION;
-  tree->root->data.op = MUL;
-  tree->root->left = (Node_t *) calloc(1, sizeof(Node_t));
-  tree->root->left->type = VARIABLE;
-  tree->root->left->data.var.ind = 0;
-  tree->vars[0] = "x";
-  tree->root->right = (Node_t *) calloc(1, sizeof(Node_t));
-  tree->root->right->type = OPERATION;
-  tree->root->right->data.op = ADD;
-  tree->root->right->left = (Node_t *) calloc(1, sizeof(Node_t));
-  tree->root->right->right = (Node_t *) calloc(1, sizeof(Node_t));
-  tree->root->right->left->type = VARIABLE;
-  tree->root->right->left->data.var.ind = 1;
-  tree->vars[1] = "y";
-  tree->root->right->right->type = VALUE;
-  tree->root->right->right->data.val.val = 6;
-  tree->len = 5;
-  tree->root->left->parent = tree->root;
-  tree->root->right->parent = tree->root;
-  tree->root->right->left->parent = tree->root->right;
-  tree->root->right->right->parent = tree->root->right;
-  treeVerify(tree, "AFTER");
-  return SUCCESS;
-}
-*/
 
 TreeErr saveTree(Tree * tree, const char * filename) {
   treeVerify(tree, "BEFORE");

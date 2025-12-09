@@ -10,6 +10,12 @@
     }                                                                          \
 }
 
+#define tex(tree, filename, arg) {                                             \
+    if (filename != NULL) {                                                    \
+      toLatex(tree, filename, __func__, arg);                                  \
+    }                                                                          \
+}
+
 #define checkStatement(arg) {                                                  \
     if (arg) {                                                                 \
         colorPrintf(RED, BOLD, "\nTree died, because: " #arg "\n");            \
@@ -33,6 +39,7 @@ enum Errors {
 Errors verify(const Tree * tree, const char * file, const char * func, const size_t len, const char * position);
 Errors checkCycle(const Tree * tree);
 void dump(const Tree * tree, const char * file, const char * func, const size_t len, const char * position, Errors img);
+void toLatex(Tree * tree, char * filename, const char * funcname, const char * time);
 const char * getNodeDataString(const Node_t * node, const Tree * tree);
 const char* getNodeTypeString(Type type);
 void createSquareNodes(FILE * file, const Node_t * node, const Tree* tree);

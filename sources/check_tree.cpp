@@ -137,6 +137,15 @@ void dump(const Tree * tree, const char * file, const char * func, const size_t 
   fclose(fp);
 }
 
+void toLatex(Tree * tree, char * filename, const char * funcname, const char * time) {
+  FILE * file = fopen(filename, "a");
+  fprintf(file, "\nЭтап %s %s.\n\n", time, funcname);
+  fprintf(file, "\\[\n");
+  treePrint(tree, file);
+  fprintf(file, "\n\\]\n");
+  fclose(file);
+}
+
 const char * getNodeDataString(const Node_t * node, const Tree * tree) {
     static char buffer[256];
     switch (node->type) {

@@ -6,45 +6,33 @@
 #include "check_tree.h"
 #include "get_tree.h"
 #include "differentiation.h"
+#include "my_printf.h"
 
-int main() {
-  clear();
-
-  double vals[] = {0, 1};
-
-  Tree * tree = NULL;
-  size_t n = 0;
-  char * str = NULL;
-  getline(&str, &n, stdin);
-  TreeErr r = getG(str, &tree);
-  if (r != SUCCESS) {
-    parseErrors(r);
-    free(str);
+int main(int argc, char ** argv) {
+  if (argc != 3) {
+    colorPrintf(RED, BOLD, "Некорректное количество аргументов.\n");
     return 0;
   }
-  free(str);
+  clear(argv[2]);
 
-  Tree * d = NULL;
-  differentiation(tree, &d, "x");
-  treePrint(d);
+  Tree * tree = NULL;
+  TreeErr result = getTree(&tree, argv[1]);
+  if (result != SUCCESS) {
+    parseErrors(result);
+    return 0;
+  }
+  Tree * res = NULL;
+  result = mainTreeCycle(tree, &res, argv[2]);
+  if (result != SUCCESS) {
+    parseErrors(result);
+    treeDestroy(tree);
+    return 0;
+  }
 
-  Tree * dd = NULL;
-  ndiff(tree, &dd, "x", 5);
-  treePrint(dd);
-
-  Tree * ty = NULL;
-  Teilor(tree, &ty, "x", vals, 10);
-  treePrint(ty);
-
-
-  double result = 0;
-  treeGetResult(tree, vals, &result);
-  printf("%lg\n", result);
-
-  treePrint(tree);
-  treeDestroy(ty);
-  treeDestroy(dd);
-  treeDestroy(d);
   treeDestroy(tree);
+  treeDestroy(res);
+  FILE * file = fopen(argv[2], "a");
+  fprintf(file, "\\end{document}\n");
+  fclose(file);
   return 0;
 }

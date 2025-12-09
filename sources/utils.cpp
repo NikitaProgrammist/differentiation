@@ -6,12 +6,21 @@
 #include "utils.h"
 #include "my_printf.h"
 
-void clear() {
+void clear(char * filename) {
   system("rm -rf \"./img/\" && mkdir \"./img/\"");
+  system("rm -rf \"./tex/\" && mkdir \"./tex/\"");
   FILE *file = fopen("./log.html", "w");
   if (file != NULL) {
     fclose(file);
   }
+  FILE * texfile = fopen(filename, "w");
+  fprintf(texfile, "\\documentclass[12pt,a4paper]{article}\n\
+\\usepackage[utf8]{inputenc}\n\
+\\usepackage[T2A]{fontenc}\n\
+\\usepackage[english,russian]{babel}\n\
+\\usepackage{amsmath}\n\
+\\begin{document}");
+  fclose(texfile);
 }
 
 void parseErrors(TreeErr error) {

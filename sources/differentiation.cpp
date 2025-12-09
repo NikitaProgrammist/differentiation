@@ -8,8 +8,9 @@
 #include "check_tree.h"
 #include "differentiation.h"
 
-TreeErr Teilor(Tree * tree, Tree ** ty, const char * param, TreeElem_t * arr, size_t n) {
+TreeErr Teilor(Tree * tree, Tree ** ty, const char * param, TreeElem_t * arr, size_t n, char * filename) {
   treeVerify(tree, "BEFORE");
+  tex(tree, filename, "BEFORE");
   int ind = getInd(tree, param);
   if (ind == -1) {
     treeInit(ty);
@@ -74,11 +75,13 @@ TreeErr Teilor(Tree * tree, Tree ** ty, const char * param, TreeElem_t * arr, si
   free(dif);
   simplify(ty);
   treeVerify(*ty, "AFTER");
+  tex(*ty, filename, "AFTER");
   return SUCCESS;
 }
 
-TreeErr ndiff(Tree * tree, Tree ** dy, const char * param, size_t n) {
+TreeErr ndiff(Tree * tree, Tree ** dy, const char * param, size_t n, char * filename) {
   treeVerify(tree, "BEFORE");
+  tex(tree, filename, "BEFORE");
   Tree * cur = tree;
   Tree * next = NULL;
   for (size_t i = 0; i < n; i++) {
@@ -98,11 +101,13 @@ TreeErr ndiff(Tree * tree, Tree ** dy, const char * param, size_t n) {
   }
   *dy = cur;
   treeVerify(*dy, "AFTER");
+  tex(*dy, filename, "AFTER");
   return SUCCESS;
 }
 
-TreeErr differentiation(Tree * tree, Tree ** dy, const char * param) {
+TreeErr differentiation(Tree * tree, Tree ** dy, const char * param, char * filename) {
   treeVerify(tree, "BEFORE");
+  tex(tree, filename, "BEFORE");
   if (*dy != NULL) {
     return INCORRECT_DATA;
   }
@@ -120,9 +125,9 @@ TreeErr differentiation(Tree * tree, Tree ** dy, const char * param) {
   }
   (*dy)->root = differen(tree->root, ind);
   parent((*dy)->root, &(*dy)->len);
-  treeVerify(*dy, "BEFORE");
   simplify(dy);
   treeVerify(*dy, "AFTER");
+  tex(*dy, filename, "AFTER");
   return SUCCESS;
 }
 

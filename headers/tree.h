@@ -74,16 +74,21 @@ union Data {
 TreeErr treeInit(Tree ** tree);
 void treeDestroy(Tree * tree);
 void DestroyNode(Node_t * node, size_t * len);
+TreeErr mainTreeCycle(Tree * tree, Tree ** res, char * filename);
+TreeErr getTree(Tree ** tree, char * filename);
+
 TreeErr treeGetFirst(Tree * tree, Node_t ** result);
 TreeErr treeGetLeft(Tree * tree, Node_t * elem, Node_t ** result);
 TreeErr treeGetRight(Tree * tree, Node_t * elem, Node_t ** result);
+
 TreeErr treeGetLen(Tree * tree, size_t * len);
-TreeErr treeGetResult(Tree * tree, TreeElem_t * arr, TreeElem_t * result);
+TreeErr treeGetResult(Tree * tree, TreeElem_t * arr, TreeElem_t * result, char * filename=NULL);
+
 TreeElem_t getVal(Node_t * node, TreeElem_t left, TreeElem_t right);
 TreeElem_t getResult(Node_t * node, TreeElem_t * arr);
-TreeErr treePrint(Tree * tree);
+
+TreeErr treePrint(Tree * tree, FILE * file=stdin);
 void PrintNode(Tree * tree, Node_t * node, FILE * file=stdout);
-//TreeErr getTree(Tree * tree);
 TreeErr saveTree(Tree * tree, const char * filename);
 
 #endif // TREE_H
