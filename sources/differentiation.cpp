@@ -10,7 +10,7 @@
 
 TreeErr Teilor(Tree * tree, Tree ** ty, const char * param, TreeElem_t * arr, size_t n, char * filename) {
   treeVerify(tree, "BEFORE");
-  tex(tree, filename, "BEFORE");
+  tex(tree, filename, "before");
   int ind = getInd(tree, param);
   if (ind == -1) {
     treeInit(ty);
@@ -25,7 +25,7 @@ TreeErr Teilor(Tree * tree, Tree ** ty, const char * param, TreeElem_t * arr, si
   Tree ** dif = (Tree **) calloc(n + 1, sizeof(Tree *));
   dif[0] = tree;
   for (size_t i = 0; i < n; i++) {
-    TreeErr result = differentiation(dif[i], dif + i + 1, param);
+    TreeErr result = differentiation(dif[i], dif + i + 1, param, filename);
     if (result != SUCCESS) {
       for (size_t j = 1; j <= i ; j++) {
         treeDestroy(dif[j]);
@@ -75,17 +75,17 @@ TreeErr Teilor(Tree * tree, Tree ** ty, const char * param, TreeElem_t * arr, si
   free(dif);
   simplify(ty);
   treeVerify(*ty, "AFTER");
-  tex(*ty, filename, "AFTER");
+  tex(*ty, filename, "after");
   return SUCCESS;
 }
 
 TreeErr ndiff(Tree * tree, Tree ** dy, const char * param, size_t n, char * filename) {
   treeVerify(tree, "BEFORE");
-  tex(tree, filename, "BEFORE");
+  tex(tree, filename, "before");
   Tree * cur = tree;
   Tree * next = NULL;
   for (size_t i = 0; i < n; i++) {
-    TreeErr result = differentiation(cur, &next, param);
+    TreeErr result = differentiation(cur, &next, param, filename);
     if (result != SUCCESS) {
       if (cur != tree) {
         treeDestroy(cur);
@@ -101,13 +101,13 @@ TreeErr ndiff(Tree * tree, Tree ** dy, const char * param, size_t n, char * file
   }
   *dy = cur;
   treeVerify(*dy, "AFTER");
-  tex(*dy, filename, "AFTER");
+  tex(*dy, filename, "after");
   return SUCCESS;
 }
 
 TreeErr differentiation(Tree * tree, Tree ** dy, const char * param, char * filename) {
   treeVerify(tree, "BEFORE");
-  tex(tree, filename, "BEFORE");
+  tex(tree, filename, "before");
   if (*dy != NULL) {
     return INCORRECT_DATA;
   }
@@ -127,7 +127,7 @@ TreeErr differentiation(Tree * tree, Tree ** dy, const char * param, char * file
   parent((*dy)->root, &(*dy)->len);
   simplify(dy);
   treeVerify(*dy, "AFTER");
-  tex(*dy, filename, "AFTER");
+  tex(*dy, filename, "after");
   return SUCCESS;
 }
 

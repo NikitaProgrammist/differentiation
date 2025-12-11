@@ -74,20 +74,20 @@ TreeErr mainTreeCycle(Tree * tree, Tree ** res, char * filename) {
   if (c == '1') {
     result = differentiation(tree, res, str, filename);
     free(str);
-    tex(*res, filename, "AFTER");
+    tex(*res, filename, "after");
     return result;
   }
   if (c == '2') {
     result = ndiff(tree, res, str, ord, filename);
     free(str);
-    tex(*res, filename, "AFTER");
+    tex(*res, filename, "after");
     return result;
   }
   if (c == '3') {
     result = Teilor(tree, res, str, vals, ord, filename);
     free(str);
     free(vals);
-    tex(*res, filename, "AFTER");
+    tex(*res, filename, "after");
     return result;
   }
   if (c == '4') {
@@ -98,11 +98,11 @@ TreeErr mainTreeCycle(Tree * tree, Tree ** res, char * filename) {
     (*res)->root = (Node_t *) calloc(1, sizeof(Node_t));
     (*res)->root->type = VALUE;
     result = treeGetResult(tree, vals, &(*res)->root->data.val.val, filename);
-    tex(*res, filename, "AFTER");
+    tex(*res, filename, "after");
     free(vals);
     return result;
   }
-  tex(*res, filename, "AFTER");
+  tex(*res, filename, "after");
   return result;
 }
 
@@ -147,7 +147,7 @@ TreeErr treeGetLen(Tree * tree, size_t * len) {
 
 TreeErr treeGetResult(Tree * tree, TreeElem_t * arr, TreeElem_t * result, char * filename) {
   treeVerify(tree, "BEFORE");
-  tex(tree, filename, "BEFORE");
+  tex(tree, filename, "before");
   *result = getResult(tree->root, arr);
   treeVerify(tree, "AFTER");
   return SUCCESS;
@@ -236,13 +236,28 @@ TreeErr treePrint(Tree * tree, FILE * file) {
 
 void PrintNode(Tree * tree, Node_t * node, FILE * file) {
   if (node->type == OPERATION && (node->left == NULL || node->right == NULL)) {
-    fprintf(file, " \\%s{", operations[node->data.op].name);
+    fprintf(file, " \\%s{(", operations[node->data.op].name);
+  }
+
+  if (node->type == OPERATION && node->data.op == LOG) {
+    fprintf(file, "\\log_{");
+    PrintNode(tree, node->left, file);
+    fprintf(file, "}{(");
+    PrintNode(tree, node->right, file);
+    fprintf(file, ")}");
+    return;
   }
   if (node->type == VARIABLE) {
     fprintf(file, " {%s} ", tree->vars[node->data.var.ind]);
   }
   if (node->type == VALUE) {
     fprintf(file, " {%lg} ", node->data.val.val);
+  }
+  if (node->type == OPERATION && node->left != NULL && node->right != NULL) {
+    fprintf(file, " {");
+    if (node->data.op == POW) {
+      fprintf(file, "(");
+    }
   }
   if (node->type == OPERATION && node->left != NULL && node->right != NULL && node->parent != NULL &&
       ((node->parent->data.op > SUB && node->data.op < MUL) || node->parent->data.op >= POW)) {
@@ -254,19 +269,19 @@ void PrintNode(Tree * tree, Node_t * node, FILE * file) {
   if (node->type == OPERATION && node->left != NULL && node->right != NULL) {
     switch(node->data.op) {
       case ADD:
-        fprintf(file, " + ");
+        fprintf(file, "} + {");
         break;
       case SUB:
-        fprintf(file, " - ");
+        fprintf(file, "} - {");
         break;
       case MUL:
-        fprintf(file, " \\cdot ");
+        fprintf(file, "} \\cdot {");
         break;
       case DIV:
-        fprintf(file, " \\over ");
+        fprintf(file, "} \\over {");
         break;
       case POW:
-        fprintf(file, " ^ ");
+        fprintf(file, ")} ^ {(");
         break;
       default:
         fprintf(file, " %s ", operations[node->data.op].name);
@@ -278,10 +293,16 @@ void PrintNode(Tree * tree, Node_t * node, FILE * file) {
   }
   if (node->type == OPERATION && node->left != NULL && node->right != NULL && node->parent != NULL &&
       ((node->parent->data.op > SUB && node->data.op < MUL) || node->parent->data.op >= POW)) {
-    fprintf(file, ") ");
+    fprintf(file, " )");
+  }
+  if (node->type == OPERATION && node->left != NULL && node->right != NULL) {
+    if (node->data.op == POW) {
+      fprintf(file, ")");
+    }
+    fprintf(file, "} ");
   }
   if (node->type == OPERATION && (node->left == NULL || node->right == NULL)) {
-    fprintf(file, "} ");
+    fprintf(file, ")} ");
   }
   return;
 }

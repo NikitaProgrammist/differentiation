@@ -14,6 +14,7 @@ TreeErr getG(char * s, Tree ** tree) {
   }
   treeInit(tree);
   (*tree)->root = getE(&s, (*tree)->vars);
+  skip(&s);
   if (*s != '$') {
     treeDestroy(*tree);
     return INCORRECT_EXPR;
@@ -26,10 +27,13 @@ TreeErr getG(char * s, Tree ** tree) {
 
 Node_t * getE(char ** s, char ** vars) {
   Node_t * val = getT(s, vars);
+  skip(s);
   while (**s == '+' || **s == '-') {
+    skip(s);
     char op = **s;
     (*s)++;
     Node_t * val2 = getT(s, vars);
+    skip(s);
     if (op == '+') {
       val = ADD_(val, val2);
     }
@@ -42,10 +46,13 @@ Node_t * getE(char ** s, char ** vars) {
 
 Node_t * getT(char ** s, char ** vars) {
   Node_t * val = getP(s, vars);
+  skip(s);
   while (**s == '*' || **s == '/' || **s == '^') {
+    skip(s);
     char op = **s;
     (*s)++;
     Node_t * val2 = getP(s, vars);
+    skip(s);
     if (op == '^') {
       val = POW_(val, val2);
     }
@@ -60,9 +67,11 @@ Node_t * getT(char ** s, char ** vars) {
 }
 
 Node_t * getP(char ** s, char ** vars) {
+  skip(s);
   if (**s == '(') {
     (*s)++;
     Node_t * val = getE(s, vars);
+    skip(s);
     if (**s == ')') {
       (*s)++;
     }
@@ -73,6 +82,7 @@ Node_t * getP(char ** s, char ** vars) {
   }
   char * cur = *s;
   Node_t * val = getF(s, vars);
+  skip(s);
   if (cur == *s) {
     free(val);
     return getV(s, vars);
@@ -82,7 +92,9 @@ Node_t * getP(char ** s, char ** vars) {
 
 Node_t * getN(char ** s) {
   Node_t * val = ZeroNode;
+  skip(s);
   while ('0' <= **s && **s <= '9') {
+    skip(s);
     val->data.val.val = val->data.val.val * 10 + **s - '0';
     (*s)++;
   }
@@ -91,7 +103,9 @@ Node_t * getN(char ** s) {
 
 Node_t * getF(char ** s, char ** vars) {
   Node_t * val = createNode(OP, D(PLUS), NULL, NULL);
+  skip(s);
   for (size_t i = 0; i < 19; i++) {
+    skip(s);
     if (!strncmp(*s, operations[i].name, operations[i].len)) {
       val->data = operations[i].data;
       *s += operations[i].len + 1;
@@ -115,7 +129,9 @@ Node_t * getV(char ** s, char ** vars) {
   const size_t max_size = 256;
   char buf[max_size] = {};
   size_t ind = 0;
+  skip(s);
   while (ind < max_size && (('a' <= **s && **s <= 'z') || ('A' <= **s && **s <= 'Z') || **s == '_')) {
+    skip(s);
     buf[ind++] = **s;
     (*s)++;
   }
@@ -139,4 +155,11 @@ Node_t * getV(char ** s, char ** vars) {
   Data data;
   data.var.ind = i;
   return createNode(VAR, data, NULL, NULL);
+}
+
+void skip(char ** s) {
+  char * st = *s;
+  while (**s == ' ' || **s == '\n' || **s == '\t') {
+    (*s)++;
+  }
 }

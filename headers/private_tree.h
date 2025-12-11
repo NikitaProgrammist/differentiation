@@ -57,12 +57,15 @@ inline Operations operations[30] = {{.name = "sin", .data = {.op = SIN}, .len = 
 #define TWO 27
 #define HALF 28
 #define NAN_VALUE 29
+
 #define DL differen(node->left, ind)
 #define DR differen(node->right, ind)
+
 #define OP OPERATION
 #define VAR VARIABLE
 #define VAL VALUE
 #define D(arg) operations[arg].data
+
 #define CL copy(node->left)
 #define CR copy(node->right)
 #define ZeroNode createNode(VAL, D(ZERO), NULL, NULL)
